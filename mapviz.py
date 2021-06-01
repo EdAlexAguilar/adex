@@ -2,7 +2,7 @@ import xml.etree.ElementTree as ET
 import networkx as nx
 import numpy as np
 import matplotlib.pyplot as plt
-from collections import namedtuple
+from collections import namedtuple, defaultdict
 
 JunctionLane = namedtuple('JunctionLane', ['id_lane', 'pred_lane', 'succ_lane', 'travel_dir'])
 JunctionRoad = namedtuple('JunctionRoad', ['id_road', 'pred_road', 'pred_contact', 'succ_road', 'succ_contact', 'turn_relation'])
@@ -80,7 +80,8 @@ def create_road_topology2(nonjunction_roads):
     junctions are implied from the list of road successor/predecessor
     return: nx directed graph where nodes are roads or junctions
     """
-    G = nx.DiGraph()
+    #G = nx.DiGraph()
+    G = nx.Graph()
     for road in nonjunction_roads:
         road_id = road.get('id')
         links = road.find('link')
@@ -91,7 +92,6 @@ def create_road_topology2(nonjunction_roads):
                 G.add_edge(f'{l_type[0]}{l_id}',f'r{road_id}')
             else:
                 G.add_edge(f'r{road_id}', f'{l_type[0]}{l_id}')
-    print(G.edges())
     return G
 
 
@@ -224,23 +224,33 @@ if vehicle_road.get('junction')!=-1:
 
 G = create_road_topology2(nonjunc_roads)
 
-nx.draw(G, with_labels=True)
+dEquivNonJuncRoads = defaultdict(list)
+for road in nonjunc_roads:
+    road_neighbors = [junct for junct in G.neighbors(f'r{road.get("id")}')]
+    road_neighbors = tuple(np.sort(road_neighbors))
+    dEquivNonJuncRoads[road_neighbors].append(f'r{road.get("id")}')
+dEquivNonJuncRoads = dict(dEquivNonJuncRoads)
 
+
+
+"""
+nx.draw(G, with_labels=True)
+print(G.edges())
 # G, r_names = create_road_topology(nonjunc_roads)
 # pos = nx.spring_layout(G)
 # nx.draw(G, pos, with_labels=True)
 # nx.draw_networkx_edge_labels(G, pos, r_names)
 plt.show()
+"""
 
-
-'''
+"""
 j400 = get_roads_in_junction('11', road_elements)
 
 for r in j400:
     print(get_junction_road_info(r))
     print(get_junction_lanes(r))
     print(f'\n')
-'''
+"""
 
 
 
