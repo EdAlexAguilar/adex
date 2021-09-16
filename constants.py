@@ -1,0 +1,5 @@
+REACTION_TIME = 0.05 # s   # TAU
+
+ACCEL_MAX = 5 # M / S^2
+BRAKE_MAX = 10 # M / S^2   # CHECK SIGN
+BRAKE_MIN = 1.5 # M / S^2  # CHECK SIGN

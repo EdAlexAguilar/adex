@@ -8,7 +8,7 @@ JunctionLane = namedtuple('JunctionLane', ['id_lane', 'pred_lane', 'succ_lane', 
 JunctionRoad = namedtuple('JunctionRoad', ['id_road', 'pred_road', 'pred_contact', 'succ_road', 'succ_contact', 'turn_relation'])
 
 
-od_map = 'OpenDriveMaps/hotspot1.xodr'
+od_map = 'OpenDriveMaps/Town02.xodr'
 
 
 def get_road_links(road):
@@ -94,8 +94,6 @@ def create_road_topology2(nonjunction_roads):
                 G.add_edge(f'r{road_id}', f'{l_type[0]}{l_id}')
     return G
 
-
-
 def get_junction_road_info(junction_road):
     """
         Input is Opendrive Road Element that is inside junction
@@ -141,6 +139,12 @@ def get_roads_in_junction(junction_id, all_roads):
         if road.attrib['junction']==junction_id:
             roads.append(road)
     return roads
+
+def find_lane_direction(road, lane_id):
+    for side in list(road.find('lanes').find('laneSection')):
+        for lane in list(side):
+            if lane.get('id') == lane_id:
+                return lane.find('userData').find('vectorLane').get('travelDir')
 
 def is_drivable(road):
     """

@@ -12,7 +12,7 @@ client = carla.Client('localhost', 2000)
 client.set_timeout(6.5)
 
 
-od_map = 'OpenDriveMaps/hotspot1.xodr'
+od_map = 'OpenDriveMaps/indy.xodr'
 with open(od_map, 'r') as file:
     map_str = file.read().replace('\n', '')
 
