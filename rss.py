@@ -1,71 +1,20 @@
 """
-Implements Simple RSS in Carla
+Implements Simple RSS Monitor in Carla
+Needs xodr file to work!
 """
-import glob
-import sys
-try:
-    sys.path.append(
-        glob.glob('C:\CARLA\CARLA_0.9.10\WindowsNoEditor\PythonAPI\carla\dist\carla-0.9.10-py3.7-win-amd64.egg')[0])
-except IndexError:
-    pass
-import carla
+
 import xml.etree.ElementTree as ET
 import networkx as nx
-import constants as c
-
 import numpy as np
 from collections import namedtuple
 
-vehicles_list = []
+import constants as c
 
-"""
-WORLD SETUP -- synchronous mode with delta = 0.05
-"""
+SETUP -- synchronous mode with delta = 0.05
+
 od_map = 'OpenDriveMaps/Town02.xodr'
-print(f'USING MAP: {od_map[:-5]}')
 
-client = carla.Client('localhost', 2000)
-client.set_timeout(5.0)
-synchronous_master = False
-
-world = client.get_world()
-# world = client.load_world('Town02')
 map = world.get_map()
-
-
-traffic_manager = client.get_trafficmanager(8000)
-traffic_manager.set_global_distance_to_leading_vehicle(1.0)
-traffic_manager.set_synchronous_mode(True)
-
-settings = world.get_settings()
-settings.synchronous_mode = True
-settings.fixed_delta_seconds = 0.05
-world.apply_settings(settings)
-synchronous_master = True
-
-blueprints_v = world.get_blueprint_library().filter("vehicle.*")
-spawn_points = world.get_map().get_spawn_points()
-# np.random.shuffle(spawn_points)
-
-# helper funcs
-SpawnActor = carla.command.SpawnActor
-SetAutopilot = carla.command.SetAutopilot
-SetVehicleLightState = carla.command.SetVehicleLightState
-FutureActor = carla.command.FutureActor
-
-
-# vehicles_test = ['vehicle.jeep.wrangler_rubicon', 'vehicle.bmw.grandtourer']
-
-Car = namedtuple('vehicle_properties',field_names=['name','color'])
-vehicles_test = [Car('vehicle.bmw.grandtourer','255,21,0'),
-                 Car('vehicle.jeep.wrangler_rubicon','0,55,255')]
-
-
-# taken from blueprint.id
-
-starting_location = spawn_points[19]  #town 2
-# starting_location = spawn_points[1] # Town03  Near starting fountain
-# 195 in Town05 starts at bottom highway
 
 
 def pretty_topology(map):
@@ -84,34 +33,6 @@ def pretty_topology(map):
 topology = pretty_topology(map)
 G = nx.Graph()
 G.add_edges_from(topology)
-
-for v in vehicles_test:
-    blueprint = world.get_blueprint_library().find(v.name)
-    blueprint.set_attribute('color', v.color)
-    blueprint.set_attribute('role_name', 'autopilot')
-    vehicle = world.spawn_actor(blueprint, starting_location)
-    vehicle.set_autopilot(True, traffic_manager.get_port())
-    vehicles_list.append(vehicle)
-    '''
-    # USING carla.command
-    light_state = vls.NONE
-    batch.append(SpawnActor(blueprint, starting_location)
-                 .then(SetAutopilot(FutureActor, True, traffic_manager.get_port()))
-                 .then(SetVehicleLightState(FutureActor, light_state)))
-    '''
-    starting_location.location.x -= 35.0
-
-print('spawned %d vehicles' % (len(vehicles_list)))
-# example of how to use parameters
-traffic_manager.global_percentage_speed_difference(30.0)
-
-jeep = vehicles_list[1]
-bmw = vehicles_list[0] # Ego
-
-'''
-for response in client.apply_batch_sync(batch, synchronous_master):
-    vehicles_list.append(response.actor_id)
-'''
 
 def get_road_info(vehicle):
     """
