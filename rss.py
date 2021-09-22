@@ -6,7 +6,6 @@ Needs xodr file to work!
 import xml.etree.ElementTree as ET
 import networkx as nx
 import numpy as np
-from collections import namedtuple
 
 import constants as c
 
