@@ -4,6 +4,9 @@ For debugging and testing purposes.
 """
 import glob
 import sys
+import rss
+import map_utils
+
 try:
     sys.path.append(
         glob.glob('C:\CARLA\CARLA_0.9.10\WindowsNoEditor\PythonAPI\carla\dist\carla-0.9.10-py3.7-win-amd64.egg')[0])
@@ -17,6 +20,7 @@ from collections import namedtuple
 """
 WORLD SETUP -- synchronous mode with delta = 0.05
 """
+
 od_map = 'OpenDriveMaps/Town02.xodr'
 print(f'USING MAP: {od_map[:-5]}')
 
@@ -70,10 +74,22 @@ traffic_manager.global_percentage_speed_difference(30.0)
 jeep = vehicles_list[1]
 bmw = vehicles_list[0] # Ego
 
+processed_map = map_utils.OpenDriveMap(od_map, map)
+rss_monitor = rss.RSSMonitor(jeep, [bmw], processed_map)
 
+
+print_dt = 40
+dt = 0
 while True:
     try:
         world.tick()
+        rss_monitor.update()
+        dt +=1
+        if dt==print_dt:
+            dt = 0
+            print(f"Distance: {rss_monitor.distance_trace[-1]}")
+            print(f"Jeep road info: {rss_monitor.get_vehicle_road_info(jeep)}")
+            print(f"BMW road info: {rss_monitor.get_vehicle_road_info(bmw)}")
     except KeyboardInterrupt:
         print('\n Destroying all Vehicles')
         client.apply_batch([carla.command.DestroyActor(v) for v in vehicles_list])
