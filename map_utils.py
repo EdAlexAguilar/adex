@@ -19,8 +19,23 @@ class OpenDriveMap:
         self.junction_elements = self.root.findall('junction')
         # print(f'{od_map} has {len(road_elements)} roads and {len(junction_elements)} junctions')
         self.nonjunc_roads = [road for road in self.road_elements if road.attrib['junction'] == '-1']
+        self.create_id_dicts()
 
         self.carla_topology = self.minimum_topology()
+
+    def cread_id_dicts(self):
+        """
+        Creates a set of useful lookup tables where the key is the string id of the road/junction
+        """
+        # Contains All junctions
+        self.id_dict_junction_elements = {j.get('id'): j for j in self.junction_elements}
+        # Contains Roads which are not in a junction
+        self.id_dict_nonjunc_roads = {r.get('id'): r for r in self.nonjunc_roads}
+        # Contains all Roads
+        self.id_dict_road_elements = {r.get('id'): r for r in self.road_elements}
+        # Contains list of Roads which are inside a Junction
+        self.id_dict_roads_injunc = {j.get('id'): [c.get('connectingRoad') for c in j.findall('connection')] for j in
+                       self.junction_elements}
 
     def is_drivable(self, road):
         """
@@ -39,6 +54,8 @@ class OpenDriveMap:
         """
         Creates Minimum Topology from Carla Map
         Returns nx.Graph with the topology
+
+        #todo: Look at topology2 in mapviz.
         """
         def wp_data(waypoint):
             return (waypoint.road_id, waypoint.lane_id)

@@ -213,7 +213,9 @@ nonjunc_roads = [road for road in road_elements if road.attrib['junction']=='-1'
 
 print(f'There are {len(nonjunc_roads)} Non-Junction Roads')
 
-
+"""
+USEFUL dictionaries :)
+"""
 dJunction = {j.get('id'):j for j in junction_elements}
 dNonJuncRoads = {r.get('id'):r for r in nonjunc_roads}
 dRoads = {r.get('id'):r for r in road_elements}

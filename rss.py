@@ -39,7 +39,7 @@ class RSSMonitor:
 
     def print_vehicle_road_info(self, vehicle):
         """Prints carla.Vehicle object road informarion"""
-        road_id, lane_id, s, section_id = get_road_info(vehicle)
+        road_id, lane_id, s, section_id = self.get_vehicle_road_info(vehicle)
         print(f"Road ID: {road_id}  Lane ID: {lane_id}  S: {s}  Section ID: {section_id}")
 
     def get_long_distances(self):
@@ -49,10 +49,15 @@ class RSSMonitor:
         for vehicle in self.actors:
             v_road, v_lane, v_s, _ = self.get_vehicle_road_info(vehicle)
             v_loc = (v_road, v_lane)
+
+            # todo: Pass all of this map processing to map_utils to have a single call
+
             min_path = self.processed_map.road_and_lane_graph_shortest_path(ego_loc, v_loc)
             min_path = [r[0] for r in min_path] # takes road ids from min_path
             min_path_roads = self.processed_map.roads_from_id(min_path)
+
             dist = self.processed_map.longitudinal_dist(ego_s, ego_lane, v_s, v_lane, min_path_roads)
+
             distances.append(dist)
         return distances, min_path
 

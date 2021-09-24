@@ -75,7 +75,7 @@ jeep = vehicles_list[1]
 bmw = vehicles_list[0] # Ego
 
 processed_map = map_utils.OpenDriveMap(od_map, map)
-rss_monitor = rss.RSSMonitor(jeep, [bmw], processed_map)
+rss_monitor = rss.RSSMonitor(bmw, [jeep], processed_map)
 
 
 print_dt = 40
