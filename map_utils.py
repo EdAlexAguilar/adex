@@ -6,6 +6,19 @@ import xml.etree.ElementTree as ET
 import networkx as nx
 
 
+#todo:
+"""
+For All the drivable roads inside a junction, create sets of waypoints.
+
+
+Then, once car is inside a junction, calculate shortest waypoint in EACH road, and calculate the
+longitudinal distance from that waypoint to the other car. The waypoint that has the minimum value will
+be the road to consider. Once road is known, find a more finegrained WP to pinpoint distance.
+
+This should work even if both cars are in the same junction. :)
+
+"""
+
 class OpenDriveMap:
     def __init__(self, od_filepath, carla_map):
         self.od_filepath = od_filepath
