@@ -20,8 +20,7 @@ class OpenDriveMap:
         # print(f'{od_map} has {len(road_elements)} roads and {len(junction_elements)} junctions')
         self.nonjunc_roads = [road for road in self.road_elements if road.attrib['junction'] == '-1']
         self.create_id_dicts()
-
-        self.carla_topology = self.minimum_topology()
+        self.topology = self.minimum_topology()
 
     def cread_id_dicts(self):
         """
@@ -52,10 +51,32 @@ class OpenDriveMap:
 
     def minimum_topology(self):
         """
+            uses only list of nonjunc_roads
+            junctions are implied from the list of road successor/predecessor
+            return: nx graph where nodes are roads or junctions
+
+            assumption: The map has no Junction-Junction connections.
+            I.e. when driving in a junction, all possible next roads are non-junc roads
+            """
+        graph_topology = nx.Graph()
+        for road in self.nonjunc_roads:
+            road_id = road.get('id')
+            links = road.find('link')
+            for link in links:
+                l_type = link.get('elementType')[0]
+                l_id = link.get('elementId')
+                if link.tag == 'predecessor':  # only predecessor or successor are defined
+                    graph_topology.add_edge(f'{l_type[0]}{l_id}', f'r{road_id}')
+                else:
+                    graph_topology.add_edge(f'r{road_id}', f'{l_type[0]}{l_id}')
+        return graph_topology
+
+    def _x_minimum_topology(self):
+        """
+        # Do Not Use
         Creates Minimum Topology from Carla Map
         Returns nx.Graph with the topology
-
-        #todo: Look at topology2 in mapviz.
+        The topology nodes are (road,lane) so hard to use.
         """
         def wp_data(waypoint):
             return (waypoint.road_id, waypoint.lane_id)

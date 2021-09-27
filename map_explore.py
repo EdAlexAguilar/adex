@@ -15,31 +15,17 @@ client.set_timeout(6.5)
 
 client.reload_world()
 world = client.get_world()
-# world = client.load_world('Town05')
+world = client.load_world('Town02')
 
 map = world.get_map()
 waypoints = map.generate_waypoints(0.5) # waypoints spaced every X meters
 
 topology = map.get_topology()
 
-def pretty_topology(map):
-    def wp_data(waypoint):
-        return (waypoint.road_id, waypoint.lane_id) #, waypoint.s)
-    raw_topology = map.get_topology()
-    topology = []
-    for edge in raw_topology:
-        r0, l0 = wp_data(edge[0])
-        r1, l1 = wp_data(edge[1])
-        e = ((r0,l0), (r1,l1))
-        topology.append(e)
-        # topology.append((edge[0].road_id, edge[1].road_id))
-    return topology
 
-topology = pretty_topology(map)
-G = nx.Graph()
-G.add_edges_from(topology)
-nx.draw(G, with_labels=True)
-plt.show()
+
+
+
 
 """
 # WAYPOINT dir

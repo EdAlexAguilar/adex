@@ -50,6 +50,7 @@ class RSSMonitor:
             v_road, v_lane, v_s, _ = self.get_vehicle_road_info(vehicle)
             v_loc = (v_road, v_lane)
 
+
             # todo: Pass all of this map processing to map_utils to have a single call
 
             min_path = self.processed_map.road_and_lane_graph_shortest_path(ego_loc, v_loc)
