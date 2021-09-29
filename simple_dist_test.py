@@ -77,21 +77,42 @@ bmw = vehicles_list[0] # Ego
 processed_map = map_utils.OpenDriveMap(od_map, map)
 rss_monitor = rss.RSSMonitor(bmw, [jeep], processed_map)
 
+import networkx as nx
+def print_diagnostics(ego, actor):
+    ego_loc = rss_monitor.get_vehicle_location(ego)
+    actor_loc = rss_monitor.get_vehicle_location(actor)
+    ego_wp = processed_map.carla_map.get_waypoint(ego_loc)
+    actor_wp = processed_map.carla_map.get_waypoint(actor_loc)
+    print(f"Staight Line Distance Between Cars:\n {processed_map.waypoint_distance(ego_wp, actor_wp)}")
+    print(f"Longitudinal Distance (ego,actor):: {processed_map.longitudinal_road_distance(ego_loc,actor_loc)}"
+          f"(actor,ego):: {processed_map.longitudinal_road_distance(actor_loc,ego_loc)}")
+    print(f"Verbose all options")
+    d = processed_map.longitudinal_road_distance(ego_loc, actor_loc, verbose=True)
+    d=nx.shortest_path_length(processed_map.full_topology, source=str(ego_wp.road_id),
+                            target=str(actor_wp.road_id), weight="distance")
+    print(f"Shortest Path Length on Naive WP: {d}")
+    d_route = nx.shortest_path(processed_map.full_topology, source=str(ego_wp.road_id),
+                                target=str(actor_wp.road_id), weight="distance")
+    print(f"Shortest Path Route on Naive WP: {d_route}")
 
-print_dt = 40
+
+print_dt = 80
 dt = 0
 while True:
     try:
         world.tick()
         rss_monitor.update()
         dt +=1
+        if rss_monitor.distance_trace[-1][0]<0:
+            break
         if dt==print_dt:
             dt = 0
             print(f"\n Distance: {rss_monitor.distance_trace[-1]}")
-            print(f"Jeep:")
-            rss_monitor.print_vehicle_road_info(jeep)
             print(f"BMW  (Ego):")
             rss_monitor.print_vehicle_road_info(bmw)
+            print(f"Jeep:")
+            rss_monitor.print_vehicle_road_info(jeep)
+            print_diagnostics(bmw, jeep)
     except KeyboardInterrupt:
         print('\n Destroying all Vehicles')
         client.apply_batch([carla.command.DestroyActor(v) for v in vehicles_list])

@@ -161,9 +161,9 @@ class OpenDriveMap:
             shortest_path -= float(road1.get('length'))
         if self.find_lane_direction(road2, str(lane2)) == 'forward':
             shortest_path += s2
-            shortest_path -= float(road2.get('length'))
         elif self.find_lane_direction(road2, str(lane2)) == 'backward':
-            shortest_path += s2
+            shortest_path += float(road2.get('length'))
+            shortest_path -= s2
         return shortest_path
 
     def _x_old_long_dist(self):
@@ -224,7 +224,7 @@ class OpenDriveMap:
     def waypoint_distance(self, waypoint1, waypoint2):
         return np.linalg.norm(self.waypoint_coordinates(waypoint1) - self.waypoint_coordinates(waypoint2))
 
-    def longitudinal_road_distance(self, v1_loc, v2_loc):
+    def longitudinal_road_distance(self, v1_loc, v2_loc, verbose=False):
         """
         v_location = vehicle.get_location() object from Carla
         Project to waypoint - check feasible waypoints (if in junction)
@@ -236,6 +236,8 @@ class OpenDriveMap:
         for f1 in feasible_wp1:
             for f2 in feasible_wp2:
                 route_distance = self._longitudinal_dist_between_wp(f1, f2)
+                if verbose:
+                    print(route_distance)
                 if route_distance < distance:
                     distance = route_distance
         return distance

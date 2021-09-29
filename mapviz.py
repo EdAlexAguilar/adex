@@ -247,13 +247,13 @@ dEquivNonJuncRoads = dict(dEquivNonJuncRoads)
 """
 
 
-# nx.draw(G, with_labels=True)
+nx.draw(G, with_labels=True)
 # print(G.edges())
 # G, r_names = create_road_topology(nonjunc_roads)
 # pos = nx.spring_layout(G)
 # nx.draw(G, pos, with_labels=True)
 # nx.draw_networkx_edge_labels(G, pos, r_names)
-# plt.show()
+plt.show()
 
 
 """
