@@ -87,9 +87,11 @@ while True:
         dt +=1
         if dt==print_dt:
             dt = 0
-            print(f"Distance: {rss_monitor.distance_trace[-1]}")
-            print(f"Jeep road info: {rss_monitor.get_vehicle_road_info(jeep)}")
-            print(f"BMW road info: {rss_monitor.get_vehicle_road_info(bmw)}")
+            print(f"\n Distance: {rss_monitor.distance_trace[-1]}")
+            print(f"Jeep:")
+            rss_monitor.print_vehicle_road_info(jeep)
+            print(f"BMW  (Ego):")
+            rss_monitor.print_vehicle_road_info(bmw)
     except KeyboardInterrupt:
         print('\n Destroying all Vehicles')
         client.apply_batch([carla.command.DestroyActor(v) for v in vehicles_list])

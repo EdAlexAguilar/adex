@@ -13,7 +13,7 @@ class RSSMonitor:
         self.distance_trace = []
 
     def update(self):
-        dist, min_path = self.get_long_distances()
+        dist = self.get_long_distances()
         self.distance_trace.append(dist)
 
     def reset_monitor(self):
@@ -28,39 +28,31 @@ class RSSMonitor:
                     2 * brake_min) - v_front ** 2 / (2 * brake_max)
         return d_safe
 
-    def get_vehicle_road_info(self, vehicle):
+    def get_vehicle_location(self, vehicle):
         """
         Given a carla.Vehicle object, returns
         road_id, lane_id, s, section_id
         """
         vehicle_loc = vehicle.get_location()
-        vehicle_wp = self.processed_map.carla_map.get_waypoint(vehicle_loc)  # has project_to_road=True so wp is at center of closest lane
-        return vehicle_wp.road_id, vehicle_wp.lane_id, vehicle_wp.s, vehicle_wp.section_id
+        return vehicle_loc
+        # vehicle_wp = self.processed_map.carla_map.get_waypoint(vehicle_loc)  # has project_to_road=True so wp is at center of closest lane
+        # return vehicle_wp
+        # return vehicle_wp.road_id, vehicle_wp.lane_id, vehicle_wp.s, vehicle_wp.section_id
 
     def print_vehicle_road_info(self, vehicle):
         """Prints carla.Vehicle object road informarion"""
-        road_id, lane_id, s, section_id = self.get_vehicle_road_info(vehicle)
-        print(f"Road ID: {road_id}  Lane ID: {lane_id}  S: {s}  Section ID: {section_id}")
+        vehicle_wp = self.processed_map.carla_map.get_waypoint(vehicle.get_location())
+        print(f"Road ID: {vehicle_wp.road_id}  Lane ID: {vehicle_wp.lane_id}"
+              f"  S: {vehicle_wp.s}  Section ID: {vehicle_wp.section_id}")
 
     def get_long_distances(self):
-        ego_road, ego_lane, ego_s, _ = self.get_vehicle_road_info(self.ego)
-        ego_loc = (ego_road, ego_lane)
+        ego_location = self.get_vehicle_location(self.ego)
         distances = []
-        for vehicle in self.actors:
-            v_road, v_lane, v_s, _ = self.get_vehicle_road_info(vehicle)
-            v_loc = (v_road, v_lane)
-
-
-            # todo: Pass all of this map processing to map_utils to have a single call
-
-            min_path = self.processed_map.road_and_lane_graph_shortest_path(ego_loc, v_loc)
-            min_path = [r[0] for r in min_path] # takes road ids from min_path
-            min_path_roads = self.processed_map.roads_from_id(min_path)
-
-            dist = self.processed_map.longitudinal_dist(ego_s, ego_lane, v_s, v_lane, min_path_roads)
-
+        for actor in self.actors:
+            actor_location = self.get_vehicle_location(actor)
+            dist = self.processed_map.longitudinal_road_distance(ego_location, actor_location)
             distances.append(dist)
-        return distances, min_path
+        return distances
 
 
 #todo: offset car dimensions (1/2)car1_length , (1/2)car2_length

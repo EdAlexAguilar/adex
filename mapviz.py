@@ -230,22 +230,30 @@ if vehicle_road.get('junction')!=-1:
 
 G = create_road_topology2(nonjunc_roads)
 
+
+
+
+
+
+"""
 dEquivNonJuncRoads = defaultdict(list)
+# If map is created incorrectly, it may happen that different lanes end up being marked
+# as different roads. We call these roads "Equivalent"
 for road in nonjunc_roads:
     road_neighbors = [junct for junct in G.neighbors(f'r{road.get("id")}')]
     road_neighbors = tuple(np.sort(road_neighbors))
     dEquivNonJuncRoads[road_neighbors].append(f'r{road.get("id")}')
 dEquivNonJuncRoads = dict(dEquivNonJuncRoads)
+"""
 
 
-
-nx.draw(G, with_labels=True)
-print(G.edges())
+# nx.draw(G, with_labels=True)
+# print(G.edges())
 # G, r_names = create_road_topology(nonjunc_roads)
 # pos = nx.spring_layout(G)
 # nx.draw(G, pos, with_labels=True)
 # nx.draw_networkx_edge_labels(G, pos, r_names)
-plt.show()
+# plt.show()
 
 
 """

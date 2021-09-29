@@ -8,7 +8,8 @@ except IndexError:
 import carla
 import networkx as nx
 import matplotlib.pyplot as plt
-
+import collections
+import numpy as np
 
 client = carla.Client('localhost', 2000)
 client.set_timeout(6.5)
@@ -18,12 +19,30 @@ world = client.get_world()
 world = client.load_world('Town02')
 
 map = world.get_map()
-waypoints = map.generate_waypoints(0.5) # waypoints spaced every X meters
+od_map = 'OpenDriveMaps/Town02.xodr'
 
-topology = map.get_topology()
+import map_utils
+M = map_utils.OpenDriveMap(od_map, map)
 
 
+waypoints = map.generate_waypoints(1) # waypoints spaced every X meters
 
+id_dict_coarse_wp = collections.defaultdict(list)
+for waypoint in waypoints:
+    if waypoint.is_junction:
+        id_dict_coarse_wp[f"{waypoint.road_id}"].append(waypoint)
+
+def waypoint_coordinates(waypoint):
+    return np.array([waypoint.transform.location.x,
+                     waypoint.transform.location.y,
+                     waypoint.transform.location.z])
+
+def waypoint_distance(waypoint1, waypoint2):
+    return np.linalg.norm(waypoint_coordinates(waypoint1)-waypoint_coordinates(waypoint2))
+
+J = M.id_dict_roads_injunc
+
+w = waypoints[10]
 
 
 
