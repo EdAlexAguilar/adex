@@ -8,19 +8,6 @@ import collections
 import numpy as np
 
 
-#todo:
-"""
-For All the drivable roads inside a junction, create sets of waypoints.
-
-
-Then, once car is inside a junction, calculate shortest waypoint in EACH road, and calculate the
-longitudinal distance from that waypoint to the other car. The waypoint that has the minimum value will
-be the road to consider. Once road is known, find a more finegrained WP to pinpoint distance.
-
-This should work even if both cars are in the same junction. :)
-
-"""
-
 class OpenDriveMap:
     def __init__(self, od_filepath, carla_map):
         self.od_filepath = od_filepath
@@ -35,7 +22,7 @@ class OpenDriveMap:
         self.junction_elements = self.root.findall('junction')
         # print(f'{od_map} has {len(road_elements)} roads and {len(junction_elements)} junctions')
         self.nonjunc_roads = [road for road in self.road_elements if road.attrib['junction'] == '-1']
-        self.waypoints = self.carla_map.generate_waypoints(0.5)  # waypoints spaced every X meters
+        self.waypoints = self.carla_map.generate_waypoints(0.3)  # waypoints spaced every X meters
         self.create_id_dicts()
         self.topology = self.minimum_topology()
         self.full_topology = self.road_network_topology()
@@ -146,19 +133,23 @@ class OpenDriveMap:
         Assumes roads on road_list are actually connected! It will only sum the
         lengths of the roads and not check connectivity
         """
+        if waypoint1.is_junction and waypoint2.is_junction:
+            if waypoint1.junction_id==waypoint2.junction_id:
+                return self.waypoint_distance(waypoint1, waypoint2)
         road_id1, lane1, s1 = str(waypoint1.road_id), waypoint1.lane_id, waypoint1.s
         road_id2, lane2, s2 = str(waypoint2.road_id), waypoint2.lane_id, waypoint2.s
         shortest_path = nx.shortest_path_length(self.full_topology, source=road_id1,
                                                 target=road_id2, weight="distance")
-        if shortest_path == 0:
+        if shortest_path == 0:  # checks to see if both wp in same road
             return abs(s1 - s2)
         road1 = self.road_from_id(road_id1)
         road2 = self.road_from_id(road_id2)
+        shortest_path -= float(road1.get('length'))
         if self.find_lane_direction(road1, str(lane1)) == 'forward':
             shortest_path -= s1
+            shortest_path += float(road1.get('length'))
         elif self.find_lane_direction(road1, str(lane1)) == 'backward':
             shortest_path += s1
-            shortest_path -= float(road1.get('length'))
         if self.find_lane_direction(road2, str(lane2)) == 'forward':
             shortest_path += s2
         elif self.find_lane_direction(road2, str(lane2)) == 'backward':
@@ -196,7 +187,7 @@ class OpenDriveMap:
         """
         return nx.shortest_path(self.carla_topology, roadlane1, roadlane2)
 
-    def feasible_waypoints(self, waypoint, tolerance=0.9):
+    def feasible_waypoints(self, waypoint, tolerance=0.7):
         """
         Given a waypoint that is in a junction,
         returns list of other waypoints which might also be feasible.
@@ -241,44 +232,3 @@ class OpenDriveMap:
                 if route_distance < distance:
                     distance = route_distance
         return distance
-
-
-'''
-def longitudinal_dist(s1, lane1, s2, lane2, road_list):
-    """
-    s1, s2:  position of car1, car2 in their road
-    road_list : car1 is at element 0, car2 at element -1 : elements are opendrive road
-
-    Assumes roads on road_list are actually connected! It will only sum the
-    lengths of the roads and not check connectivity
-    """
-    assert s1 <= float(road_list[0].get('length'))
-    assert s2 <= float(road_list[-1].get('length'))
-    if len(road_list) == 1:
-        return abs(s1 - s2)
-    road1_dist = s1
-    road2_dist = s2
-    if find_lane_direction(road_list[0], str(lane1)) == 'forward':
-        road1_dist *= -1
-        road1_dist += float(road_list[0].get('length'))
-    if find_lane_direction(road_list[-1], str(lane2)) == 'backward':
-        road2_dist *= -1
-        road2_dist += float(road_list[-1].get('length'))
-
-    """
-    for link_element in list(road_list[1].find('link')):
-        if link_element.get('elementId') == road_list[0].get('id'):
-            if link_element.get('contactPoint') == 'end':
-                road1_dist *= -1
-                road1_dist += float(road_list[0].get('length'))
-    for link_element in list(road_list[-2].find('link')):
-        if link_element.get('elementId') == road_list[-1].get('id'):
-            if link_element.get('contactPoint') == 'end':
-                road2_dist *= -1
-                road2_dist += float(road_list[-1].get('length'))
-    """
-    intermediate_dist = 0
-    for road in road_list[1:-1]:
-        intermediate_dist += float(road.get('length'))
-    return road1_dist + road2_dist + intermediate_dist
-'''
