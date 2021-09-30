@@ -11,7 +11,7 @@ client = carla.Client('localhost', 2000)
 # client.set_timeout(6.5)
 
 # client.reload_world()
-world = client.load_world('Town03')
+world = client.load_world('Town04')
 
 map = world.get_map()
 

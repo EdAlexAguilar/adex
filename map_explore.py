@@ -6,45 +6,43 @@ try:
 except IndexError:
     pass
 import carla
-import networkx as nx
-import matplotlib.pyplot as plt
 import collections
-import numpy as np
+import matplotlib.pyplot as plt
 
 client = carla.Client('localhost', 2000)
-client.set_timeout(6.5)
+client.set_timeout(2.5)
 
 client.reload_world()
 world = client.get_world()
-world = client.load_world('Town02')
+world = client.load_world('Town05')
 
 map = world.get_map()
-od_map = 'OpenDriveMaps/Town02.xodr'
+# od_map = 'OpenDriveMaps/Town05.xodr'
 
-import map_utils
-M = map_utils.OpenDriveMap(od_map, map)
+waypoints = map.generate_waypoints(0.25) # waypoints spaced every X meters
 
-
-waypoints = map.generate_waypoints(1) # waypoints spaced every X meters
-
-id_dict_coarse_wp = collections.defaultdict(list)
+id_dict_wp = collections.defaultdict(list)
 for waypoint in waypoints:
-    if waypoint.is_junction:
-        id_dict_coarse_wp[f"{waypoint.road_id}"].append(waypoint)
+    id_dict_wp[f"{waypoint.road_id}"].append(waypoint)
 
-def waypoint_coordinates(waypoint):
-    return np.array([waypoint.transform.location.x,
-                     waypoint.transform.location.y,
-                     waypoint.transform.location.z])
-
-def waypoint_distance(waypoint1, waypoint2):
-    return np.linalg.norm(waypoint_coordinates(waypoint1)-waypoint_coordinates(waypoint2))
-
-J = M.id_dict_roads_injunc
-
-w = waypoints[10]
-
-
+plt.subplot(211)
+# Invert the y axis since we follow UE4 coordinates
+plt.gca().invert_yaxis()
+plt.margins(x=0.5, y=0.1)
+plt.plot(
+    [wp.transform.location.x for wp in waypoints],
+    [wp.transform.location.y for wp in waypoints],
+    linestyle='', markersize=1, color='blue', marker='.')
+plt.subplot(212)
+# Invert the y axis since we follow UE4 coordinates
+plt.gca().invert_yaxis()
+plt.margins(x=0.5, y=0.1)
+for road_id, waypoints_in_road in id_dict_wp.items():
+    plt.plot(
+        [wp.transform.location.x for wp in waypoints_in_road],
+        [wp.transform.location.y for wp in waypoints_in_road],
+        linestyle='', markersize=1, marker='.')
+plt.show()
 
 """
 # WAYPOINT dir
