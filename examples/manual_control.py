@@ -59,15 +59,11 @@ from __future__ import print_function
 import glob
 import os
 import sys
-
 try:
-    sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s.egg' % (
-        sys.version_info.major,
-        sys.version_info.minor,
-        'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
+    sys.path.append(
+        glob.glob('C:\CARLA\CARLA_0.9.10\WindowsNoEditor\PythonAPI\carla\dist\carla-0.9.10-py3.7-win-amd64.egg')[0])
 except IndexError:
     pass
-
 
 # ==============================================================================
 # -- imports -------------------------------------------------------------------
@@ -1037,6 +1033,8 @@ def game_loop(args):
         client = carla.Client(args.host, args.port)
         client.set_timeout(2.0)
 
+
+
         display = pygame.display.set_mode(
             (args.width, args.height),
             pygame.HWSURFACE | pygame.DOUBLEBUF)
@@ -1044,6 +1042,9 @@ def game_loop(args):
         hud = HUD(args.width, args.height)
         world = World(client.get_world(), hud, args)
         controller = KeyboardControl(world, args.autopilot)
+        player = world.player
+        carla_map = world.world.get_map()
+        roads_used = []
 
         clock = pygame.time.Clock()
         while True:
@@ -1053,6 +1054,11 @@ def game_loop(args):
             world.tick(clock)
             world.render(display)
             pygame.display.flip()
+            player_loc = player.get_location()
+            player_wp = carla_map.get_waypoint(player_loc)
+            if player_wp.road_id not in roads_used:
+                roads_used.append(player_wp.road_id)
+                print(roads_used)
 
     finally:
 
