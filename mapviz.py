@@ -8,7 +8,7 @@ JunctionLane = namedtuple('JunctionLane', ['id_lane', 'pred_lane', 'succ_lane', 
 JunctionRoad = namedtuple('JunctionRoad', ['id_road', 'pred_road', 'pred_contact', 'succ_road', 'succ_contact', 'turn_relation'])
 
 
-od_map = 'OpenDriveMaps/Town02.xodr'
+od_map = 'OpenDriveMaps/Town04.xodr'
 
 
 def get_road_links(road):

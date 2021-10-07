@@ -11,13 +11,10 @@ import os
 import sys
 
 try:
-    sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s.egg' % (
-        sys.version_info.major,
-        sys.version_info.minor,
-        'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
+    sys.path.append(
+        glob.glob('C:\CARLA\CARLA_0.9.10\WindowsNoEditor\PythonAPI\carla\dist\carla-0.9.10-py3.7-win-amd64.egg')[0])
 except IndexError:
     pass
-
 import carla
 
 import argparse
@@ -86,6 +83,7 @@ def main():
 
         # replay the session
         print(client.replay_file(args.recorder_filename, args.start, args.duration, args.camera))
+        print(args.start, args.duration, args.camera)
 
     finally:
         pass

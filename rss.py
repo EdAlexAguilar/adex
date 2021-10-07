@@ -11,6 +11,7 @@ class RSSMonitor:
         self.actors = actors # list of all other vehicles and actors to monitor
         self.processed_map = processed_map # Custom Map Object "OpenDriveMap'
         self.distance_trace = []
+        self.straight_distance_trace = []
 
     def update(self):
         dist = self.get_long_distances()
@@ -53,6 +54,10 @@ class RSSMonitor:
             dist = self.processed_map.longitudinal_road_distance(ego_location, actor_location)
             distances.append(dist)
         return distances
+
+    def straight_line_distance(self):
+        pass
+
 
 
 #todo: offset car dimensions (1/2)car1_length , (1/2)car2_length

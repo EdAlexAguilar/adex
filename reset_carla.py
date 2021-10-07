@@ -11,9 +11,9 @@ client = carla.Client('localhost', 2000)
 # client.set_timeout(6.5)
 
 # client.reload_world()
-world = client.load_world('Town04')
+world = client.load_world('Town05')
 
-map = world.get_map()
+# map = world.get_map()
 
 # client.replay_file("recording_scenic_1.log")
 # client.show_recorder_file_info("recording_scenic_1.log")
