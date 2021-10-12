@@ -10,9 +10,9 @@ import rss
 import map_utils
 import numpy as np
 
-LOG_FILE = str(r'C:\Users\aguilare\GitHub\adex\recording_scenic_3.log')
+LOG_FILE = str(r'C:\Users\aguilare\GitHub\adex\record_11102021_141948.log')
 
-od_map = 'OpenDriveMaps/Town05.xodr'
+od_map = 'OpenDriveMaps/Town04.xodr'
 
 client = carla.Client('localhost', 2000)
 client.set_timeout(5.0)
@@ -26,10 +26,10 @@ new_settings.fixed_delta_seconds = 0.05
 world.apply_settings(new_settings)
 
 # arguments:: show all
-# recording_info = client.show_recorder_file_info(LOG_FILE, False)
+recording_info = client.show_recorder_file_info(LOG_FILE, False)
 
 # arguments:: Start time (0 = beginning), Duration (0 = all), Camera (0 free float, or id)
-print(client.replay_file(LOG_FILE, 0, 0, 815))
+print(client.replay_file(LOG_FILE, 0, 0, 208))
 world.tick() # first tick to start replay file
 
 actor_list = world.get_actors()
