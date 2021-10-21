@@ -6,11 +6,12 @@ try:
 except IndexError:
     pass
 import carla
+
 import rss
 import map_utils
 import numpy as np
 
-LOG_FILE = str(r'C:\Users\aguilare\GitHub\adex\record_11102021_141948.log')
+LOG_FILE = str(r'C:\Users\aguilare\GitHub\adex\record_11102021_140409.log')
 
 od_map = 'OpenDriveMaps/Town04.xodr'
 
@@ -29,12 +30,13 @@ world.apply_settings(new_settings)
 recording_info = client.show_recorder_file_info(LOG_FILE, False)
 
 # arguments:: Start time (0 = beginning), Duration (0 = all), Camera (0 free float, or id)
-print(client.replay_file(LOG_FILE, 0, 0, 208))
+print(client.replay_file(LOG_FILE, 0, 0, 0))
 world.tick() # first tick to start replay file
 
 actor_list = world.get_actors()
 # Find an actor by id.
 vehicles = [v for v in actor_list.filter('vehicle.*')]
+print(f"Found {len(vehicles)} Vehicles")
 walkers = [w for w in actor_list.filter('walker.*')]
 
 for i, v in enumerate(vehicles):
@@ -51,7 +53,7 @@ def straight_line_distance(vehicle1, vehicle2):
 
 
 processed_map = map_utils.OpenDriveMap(od_map, carla_map)
-rss_monitor = rss.RSSMonitor(vehicles[1], [vehicles[0]], processed_map)
+rss_monitor = rss.RSSMonitor(vehicles[0], [vehicles[1]], processed_map)
 straight_line_monitor = np.array([])
 step_counter = 0
 

@@ -35,12 +35,12 @@ static_waypoints =[]
 static_waypoints.append([w for w in carla_map.generate_waypoints(CONES_EVERY) if w.road_id in TRACK_ROADS and w.lane_id==5])
 static_waypoints.append([w for w in carla_map.generate_waypoints(CONES_EVERY) if w.road_id in TRACK_ROADS and w.lane_id==3])
 static_items = []
-print(f"Spawning {functools.reduce(lambda count, l: count + len(l), cone_waypoints, 0)} Static Items.")
+print(f"Spawning {functools.reduce(lambda count, l: count + len(l), static_waypoints, 0)} Static Items.")
 for sublist in static_waypoints:
     for wp in sublist:
         blueprint = world.get_blueprint_library().find(f'static.prop.streetbarrier') # constructioncone') #trafficcone01')
-        cone = world.spawn_actor(blueprint, wp.transform)
-        static_items.append(cone)
+        static_object = world.spawn_actor(blueprint, wp.transform)
+        static_items.append(static_object)
 
 while True:
     try:
@@ -50,3 +50,25 @@ while True:
         client.apply_batch([carla.command.DestroyActor(s) for s in static_items])
         client.reload_world()
         break
+
+
+def send_control_command(client, throttle, steer, brake,
+                         hand_brake=False, reverse=False):
+    """
+    throttle in [0,1]
+    steer in [-1,1]
+    brake in [0,1]
+    Automatic control of vehicle. (manual_gear_shift is False)
+    """
+    control = VehicleControl()
+    # Clamp all values within their limits
+    steer = np.fmax(np.fmin(steer, 1.0), -1.0)
+    throttle = np.fmax(np.fmin(throttle, 1.0), 0)
+    brake = np.fmax(np.fmin(brake, 1.0), 0)
+
+    control.steer = steer
+    control.throttle = throttle
+    control.brake = brake
+    control.hand_brake = hand_brake
+    control.reverse = reverse
+    client.send_control(control)
