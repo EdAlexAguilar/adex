@@ -11,15 +11,20 @@ import rss
 import map_utils
 import numpy as np
 
-LOG_FILE = str(r'C:\Users\aguilare\GitHub\adex\record_11102021_140409.log')
+# For DEMO
+# LOG_FILE = str(r'C:\Users\aguilare\GitHub\adex\record_11102021_140409.log')
+# od_map = 'OpenDriveMaps/Town04.xodr'
 
-od_map = 'OpenDriveMaps/Town04.xodr'
+
+# For DEBUGGING
+LOG_FILE = str(r'C:\Users\aguilare\GitHub\adex\recording_scenic_2.log')
+od_map = 'OpenDriveMaps/Town05.xodr'
+
 
 client = carla.Client('localhost', 2000)
 client.set_timeout(5.0)
 world = client.load_world(od_map[-11:-5])
 carla_map = world.get_map()
-
 
 new_settings = world.get_settings()
 new_settings.synchronous_mode = True
@@ -50,14 +55,13 @@ def straight_line_distance(vehicle1, vehicle2):
     wp2 = processed_map.carla_map.get_waypoint(loc2)
     return processed_map.waypoint_distance(wp1, wp2)
 
-
-
 processed_map = map_utils.OpenDriveMap(od_map, carla_map)
 rss_monitor = rss.RSSMonitor(vehicles[0], [vehicles[1]], processed_map)
 straight_line_monitor = np.array([])
 step_counter = 0
 
 # Simulation loop
+
 while True:
     try:
         world.tick()

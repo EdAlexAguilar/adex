@@ -1,6 +1,5 @@
 """
 Implements Simple RSS Monitor in Carla
-Needs xodr file to work!
 """
 import constants as c
 
@@ -41,7 +40,7 @@ class RSSMonitor:
         # return vehicle_wp.road_id, vehicle_wp.lane_id, vehicle_wp.s, vehicle_wp.section_id
 
     def print_vehicle_road_info(self, vehicle):
-        """Prints carla.Vehicle object road informarion"""
+        """Prints carla.Vehicle object road information"""
         vehicle_wp = self.processed_map.carla_map.get_waypoint(vehicle.get_location())
         print(f"Road ID: {vehicle_wp.road_id}  Lane ID: {vehicle_wp.lane_id}"
               f"  S: {vehicle_wp.s}  Section ID: {vehicle_wp.section_id}")
