@@ -2,19 +2,56 @@
 Implements Simple RSS Monitor in Carla
 """
 import constants as c
-
+import numpy as np
 
 class RSSMonitor:
-    def __init__(self, ego, actors, processed_map):
+    """
+    1 Monitor for every other actor involved
+    """
+    def __init__(self, ego, actor, processed_map):
         self.ego = ego # ego vehicle
-        self.actors = actors # list of all other vehicles and actors to monitor
+        self.actor = actor # A SINGLE ACTOR
         self.processed_map = processed_map # Custom Map Object "OpenDriveMap'
-        self.distance_trace = []
         self.straight_distance_trace = []
+        self.long_distance_trace = []
+        self.ego_long_velocity_trace = []
+        self.actor_long_velocity_trace = []
+        self.ego_long_acceleration_trace = []
+        self.actor_long_acceleration_trace = []
+        self.lat_distance_trace = []
+        self.ego_lat_velocity_trace = []
+        self.actor_lat_velocity_trace = []
+        self.ego_lat_acceleration_trace = []
+        self.actor_lat_acceleration_trace = []
+        self.get_vehicle_dimensions()  # Half width, and Half lengths
+
+    def get_vehicle_dimensions(self):
+        """
+        In fact widths and lengths are **HALF** of the value.
+        """
+        self.ego_width = self.ego.bounding_box.extent.y
+        self.ego_length = self.ego.bounding_box.extent.x
+        self.actor_width = self.actor.bounding_box.extent.y
+        self.actor_length = self.actor.bounding_box.extent.x
 
     def update(self):
-        dist = self.get_long_distances()
-        self.distance_trace.append(dist)
+        long_dist = self.get_long_distance()
+        lat_dist = self.get_lat_distance()
+        ego_v_long, ego_v_lat = self.get_longlat_velocity(self.ego)
+        ego_acc_long, ego_acc_lat = self.get_longlat_acceleration(self.ego)
+        actor_v_long, actor_v_lat = self.get_longlat_velocity(self.actor)
+        actor_acc_long, actor_acc_lat = self.get_longlat_acceleration(self.actor)
+        self.long_distance_trace.append(long_dist)
+        self.ego_long_velocity_trace.append(ego_v_long)
+        self.actor_long_velocity_trace.append(actor_v_long)
+        self.ego_long_acceleration_trace.append(ego_acc_long)
+        self.actor_long_acceleration_trace.append(actor_acc_lat)
+        self.lat_distance_trace.append(lat_dist)
+        self.ego_lat_velocity_trace.append(ego_acc_long)
+        self.actor_lat_velocity_trace.append(actor_acc_long)
+        self.ego_lat_acceleration_trace.append(ego_acc_lat)
+        self.actor_lat_acceleration_trace.append(actor_acc_lat)
+
 
     def reset_monitor(self):
         self.distance_trace = []
@@ -45,21 +82,44 @@ class RSSMonitor:
         print(f"Road ID: {vehicle_wp.road_id}  Lane ID: {vehicle_wp.lane_id}"
               f"  S: {vehicle_wp.s}  Section ID: {vehicle_wp.section_id}")
 
-    def get_long_distances(self):
+    def get_long_distance(self):
         ego_location = self.get_vehicle_location(self.ego)
-        distances = []
-        for actor in self.actors:
-            actor_location = self.get_vehicle_location(actor)
-            dist = self.processed_map.longitudinal_road_distance(ego_location, actor_location)
-            distances.append(dist)
-        return distances
+        actor_location = self.get_vehicle_location(self.actor)
+        dist = self.processed_map.longitudinal_road_distance(ego_location, actor_location)
+        dist -= (self.ego_length + self.actor_length)
+        return dist
+
+    def get_lat_distance(self):
+        ego_location = self.get_vehicle_location(self.ego)
+        actor_location = self.get_vehicle_location(self.actor)
+        dist = self.processed_map.lateral_road_distance(ego_location, actor_location)
+        dist -= (self.ego_width + self.actor_width)
+        return dist
+
+    def get_longlat_velocity(self, vehicle):
+        vel = vehicle.get_velocity()
+        veh_loc = self.get_vehicle_location(vehicle)
+        orientation = self.processed_map.location_orientation(veh_loc)
+        v_long, v_lat = self.vector3D_longlat(vel, orientation)
+        return v_long, v_lat
+
+    def get_longlat_acceleration(self, vehicle):
+        acc = vehicle.get_acceleration()
+        veh_loc = self.get_vehicle_location(vehicle)
+        orientation = self.processed_map.location_orientation(veh_loc)
+        a_long, a_lat = self.vector3D_longlat(acc, orientation)
+        return a_long, a_lat
+
+    def vector3D_longlat(self, vec, orientation):
+        v = self.vec3D_np(vec)
+        ori = self.vec3D_np(orientation)
+        long = np.abs(v @ ori)
+        v_lat = v - long*ori
+        lat = np.linalg.norm(v_lat)
+        return long, lat
+
+    def vec3D_np(self, vec):
+        return np.array([vec.x, vec.y, vec.z])
 
     def straight_line_distance(self):
         pass
-
-
-
-#todo: offset car dimensions (1/2)car1_length , (1/2)car2_length
-
-def vector_magnitude(vec):
-    return np.sqrt(vec.x**2 + vec.y**2 + vec.z**2)

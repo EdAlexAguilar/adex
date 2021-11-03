@@ -216,6 +216,10 @@ class OpenDriveMap:
         """ unit vector (object) pointing in the road direction"""
         return waypoint.transform.rotation.get_forward_vector()
 
+    def location_orientation(self, location):
+        waypoint = self.carla_map.get_waypoint(location)
+        return self.waypoint_orientation(waypoint)
+
     def waypoint_distance(self, waypoint1, waypoint2):
         return np.linalg.norm(self.waypoint_coordinates(waypoint1) - self.waypoint_coordinates(waypoint2))
 
