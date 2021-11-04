@@ -2,7 +2,7 @@ import glob
 import sys
 try:
     sys.path.append(
-        glob.glob('C:\CARLA\CARLA_0.9.10\WindowsNoEditor\PythonAPI\carla\dist\carla-0.9.10-py3.7-win-amd64.egg')[0])
+        glob.glob('C:\CARLA\CARLA_0.9.11\WindowsNoEditor\PythonAPI\carla\dist\carla-0.9.11-py3.7-win-amd64.egg')[0])
 except IndexError:
     pass
 import carla
@@ -26,7 +26,7 @@ carla_map = world.get_map()
 
 new_settings = world.get_settings()
 new_settings.synchronous_mode = True
-new_settings.fixed_delta_seconds = 0.05
+new_settings.fixed_delta_seconds = 0.04
 world.apply_settings(new_settings)
 
 # arguments:: show all
@@ -56,9 +56,9 @@ while True:
     try:
         world.tick()
         rss_monitor.update()
-        #step_counter += 1
-        #if step_counter%40==0:
-        #    print(vehicles[0].get_velocity().x, vehicles[0].get_velocity().y)
+        step_counter += 1
+        if step_counter%40==0:
+            print(vehicles[0].get_velocity().x, vehicles[0].get_velocity().y)
     except KeyboardInterrupt:
         print('\n Destroying all Vehicles')
         # rss_monitor.straight_distance_trace
