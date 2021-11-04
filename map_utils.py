@@ -26,6 +26,8 @@ class OpenDriveMap:
         self.create_id_dicts()
         self.topology = self.minimum_topology()
         self.full_topology = self.road_network_topology()
+        self.roadlane_topology = self.carla_roadlane_topology()
+        self.dict_lane_diff = {}
 
     def create_id_dicts(self):
         """
@@ -61,6 +63,19 @@ class OpenDriveMap:
                 if lane.get('type') == 'driving':
                     return True
         return False
+
+    def drivable_lanes(self, road):
+        """
+        Returns List of drivable lanes from a road
+        """
+        drivable_lanes = []
+        sections = list(road.find('lanes').find('laneSection'))
+        for section in sections:
+            sect_lanes = section.findall('lane')
+            for lane in sect_lanes:
+                if lane.get('type') == 'driving':
+                    drivable_lanes.append(int(lane.get('id')))
+        return drivable_lanes
 
     def road_network_topology(self):
         """
@@ -101,7 +116,7 @@ class OpenDriveMap:
                     graph_topology.add_edge(f'r{road_id}', f'{l_type[0]}{l_id}')
         return graph_topology
 
-    def _x_minimum_topology(self):
+    def carla_roadlane_topology(self):
         """
         # Do Not Use
         Creates Minimum Topology from Carla Map
@@ -127,6 +142,36 @@ class OpenDriveMap:
             for lane in list(side):
                 if lane.get('id') == lane_id:
                     return lane.find('userData').find('vectorLane').get('travelDir')
+
+    def _lane_dist_between_wp(self, waypoint1, waypoint2):
+        if waypoint1.is_junction and waypoint2.is_junction:
+            if waypoint1.junction_id==waypoint2.junction_id:
+                return 0
+        road1, lane1 = waypoint1.road_id, waypoint1.lane_id
+        road2, lane2 = waypoint2.road_id, waypoint2.lane_id
+        road_1_drivable_lanes = self.drivable_lanes(self.id_dict_road_elements[str(road1)])
+        if ((road1, lane1), (road2, lane2)) in self.dict_lane_diff:
+            return self.dict_lane_diff[((road1, lane1), (road2, lane2))]
+        elif ((road2, lane2), (road1, lane1)) in self.dict_lane_diff:
+            return self.dict_lane_diff[((road2, lane2), (road1, lane1))]
+        else:
+            path_dist = [nx.shortest_path_length(self.roadlane_topology, source=(road1, ll),
+                                          target=(road2,lane2))
+                         for ll in road_1_drivable_lanes]
+            if min(path_dist) == path_dist[road_1_drivable_lanes.index(lane1)]:
+                lane_dist = 0
+            else:
+                min_lane = road_1_drivable_lanes[np.argmin(path_dist)]
+                lane_dist = min_lane - lane1
+                if np.sign(min_lane) != np.sign(lane1):
+                    lane_dist += np.sign(lane1)
+                #todo: how does traffic direction affect this?
+                if self.find_lane_direction(self.id_dict_road_elements[str(road1)], str(lane1)) == 'backward':
+                    lane_dist *= -1
+            self.dict_lane_diff[((road1, lane1), (road2, lane2))] = lane_dist
+            self.dict_lane_diff[((road2, lane2), (road1, lane1))] = lane_dist
+            return lane_dist
+
 
     def _longitudinal_dist_between_wp(self, waypoint1, waypoint2):
         """
@@ -240,3 +285,15 @@ class OpenDriveMap:
                 if route_distance < distance:
                     distance = route_distance
         return distance
+
+    def lateral_road_distance(self, v1_loc, v2_loc):
+        wp1, wp2 = self.carla_map.get_waypoint(v1_loc), self.carla_map.get_waypoint(v2_loc)
+        feasible_wp1 = self.feasible_waypoints(wp1)
+        feasible_wp2 = self.feasible_waypoints(wp2)
+        distance = 4
+        for f1 in feasible_wp1:
+            for f2 in feasible_wp2:
+                lane_distance = self._lane_dist_between_wp(f1, f2)
+                if abs(lane_distance) < abs(distance):
+                    distance = lane_distance
+        return abs(distance*wp1.lane_width)

@@ -21,12 +21,11 @@ from collections import namedtuple
 WORLD SETUP -- synchronous mode with delta = 0.05
 """
 
-od_map = 'OpenDriveMaps/Town03.xodr'
+od_map = 'OpenDriveMaps/Town05.xodr'
 print(f'USING MAP: {od_map[:-5]}')
 
 client = carla.Client('localhost', 2000)
 client.set_timeout(3.0)
-synchronous_master = False
 
 world = client.load_world(od_map[-11:-5])
 map = world.get_map()
@@ -38,7 +37,6 @@ settings = world.get_settings()
 settings.synchronous_mode = True
 settings.fixed_delta_seconds = 0.05
 world.apply_settings(settings)
-synchronous_master = True
 
 Car = namedtuple('vehicle_properties',field_names=['name','color'])
 vehicles_test = [Car('vehicle.bmw.grandtourer','255,21,0'),
@@ -47,6 +45,9 @@ vehicles_test = [Car('vehicle.bmw.grandtourer','255,21,0'),
 spawn_points = world.get_map().get_spawn_points()
 starting_location = spawn_points[1]
 
+processed_map = map_utils.OpenDriveMap(od_map, map)
+
+"""
 vehicles_list = []
 for v in vehicles_test:
     blueprint = world.get_blueprint_library().find(v.name)
@@ -63,11 +64,11 @@ jeep = vehicles_list[1]
 bmw = vehicles_list[0] # Ego
 
 processed_map = map_utils.OpenDriveMap(od_map, map)
-rss_monitor = rss.RSSMonitor(bmw, [jeep], processed_map)
+rss_monitor = rss.RSSMonitor(bmw, jeep, processed_map)
 
 step_counter = 0
-while True:
+while step_counter<600:
+    step_counter+=1
     world.tick()
-    print(f"bmw width {bmw.bounding_box.extent.y*2}   bmw length {bmw.bounding_box.extent.x*2}")
-    print(f"jeep width {jeep.bounding_box.extent.y * 2}   bmw length {jeep.bounding_box.extent.x * 2}")
 
+"""

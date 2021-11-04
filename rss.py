@@ -12,7 +12,7 @@ class RSSMonitor:
         self.ego = ego # ego vehicle
         self.actor = actor # A SINGLE ACTOR
         self.processed_map = processed_map # Custom Map Object "OpenDriveMap'
-        self.straight_distance_trace = []
+        # self.straight_distance_trace = []
         self.long_distance_trace = []
         self.ego_long_velocity_trace = []
         self.actor_long_velocity_trace = []
@@ -52,7 +52,6 @@ class RSSMonitor:
         self.ego_lat_acceleration_trace.append(ego_acc_lat)
         self.actor_lat_acceleration_trace.append(actor_acc_lat)
 
-
     def reset_monitor(self):
         self.distance_trace = []
 
@@ -86,6 +85,9 @@ class RSSMonitor:
         ego_location = self.get_vehicle_location(self.ego)
         actor_location = self.get_vehicle_location(self.actor)
         dist = self.processed_map.longitudinal_road_distance(ego_location, actor_location)
+        #todo: direction of travel of both roads might affect this?
+        ego_offset_long, _ = self.get_wp_offset(ego_location)
+        actor_offset_long, _ = self.get_wp_offset(actor_location)
         dist -= (self.ego_length + self.actor_length)
         return dist
 
@@ -93,21 +95,31 @@ class RSSMonitor:
         ego_location = self.get_vehicle_location(self.ego)
         actor_location = self.get_vehicle_location(self.actor)
         dist = self.processed_map.lateral_road_distance(ego_location, actor_location)
-        dist -= (self.ego_width + self.actor_width)
+        _, ego_offset_lat = self.get_wp_offset(ego_location)
+        _, actor_offset_lat = self.get_wp_offset(actor_location)
+        #todo: this assumes car is facing forward, but is just rigidly displaced
+        dist -= (self.ego_width + self.actor_width + ego_offset_lat + actor_offset_lat)
         return dist
+
+    def get_wp_offset(self, location):
+        wp_location = self.processed_map.carla_map.get_waypoint(location).transform.location
+        road_orientation = self.processed_map.location_orientation(location)
+        offset = location - wp_location
+        offset_long, offset_lat = self.vector3D_longlat(offset, road_orientation)
+        return offset_long, offset_lat
 
     def get_longlat_velocity(self, vehicle):
         vel = vehicle.get_velocity()
         veh_loc = self.get_vehicle_location(vehicle)
-        orientation = self.processed_map.location_orientation(veh_loc)
-        v_long, v_lat = self.vector3D_longlat(vel, orientation)
+        road_orientation = self.processed_map.location_orientation(veh_loc)
+        v_long, v_lat = self.vector3D_longlat(vel, road_orientation)
         return v_long, v_lat
 
     def get_longlat_acceleration(self, vehicle):
         acc = vehicle.get_acceleration()
         veh_loc = self.get_vehicle_location(vehicle)
-        orientation = self.processed_map.location_orientation(veh_loc)
-        a_long, a_lat = self.vector3D_longlat(acc, orientation)
+        road_orientation = self.processed_map.location_orientation(veh_loc)
+        a_long, a_lat = self.vector3D_longlat(acc, road_orientation)
         return a_long, a_lat
 
     def vector3D_longlat(self, vec, orientation):

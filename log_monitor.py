@@ -15,11 +15,9 @@ import numpy as np
 # LOG_FILE = str(r'C:\Users\aguilare\GitHub\adex\record_11102021_140409.log')
 # od_map = 'OpenDriveMaps/Town04.xodr'
 
-
 # For DEBUGGING
-LOG_FILE = str(r'C:\Users\aguilare\GitHub\adex\recording_scenic_2.log')
+LOG_FILE = str(r'C:\Users\aguilare\GitHub\adex\recording_scenic_1.log')
 od_map = 'OpenDriveMaps/Town05.xodr'
-
 
 client = carla.Client('localhost', 2000)
 client.set_timeout(5.0)
@@ -47,17 +45,9 @@ walkers = [w for w in actor_list.filter('walker.*')]
 for i, v in enumerate(vehicles):
     print(f"Vehicle {i} : Id: {v.id} : Type {v.type_id}")
 
-
-def straight_line_distance(vehicle1, vehicle2):
-    loc1 = rss_monitor.get_vehicle_location(vehicle1)
-    loc2 = rss_monitor.get_vehicle_location(vehicle2)
-    wp1 = processed_map.carla_map.get_waypoint(loc1)
-    wp2 = processed_map.carla_map.get_waypoint(loc2)
-    return processed_map.waypoint_distance(wp1, wp2)
-
 processed_map = map_utils.OpenDriveMap(od_map, carla_map)
-rss_monitor = rss.RSSMonitor(vehicles[0], [vehicles[1]], processed_map)
-straight_line_monitor = np.array([])
+rss_monitor = rss.RSSMonitor(vehicles[0], vehicles[1], processed_map)
+
 step_counter = 0
 
 # Simulation loop
@@ -65,13 +55,25 @@ step_counter = 0
 while True:
     try:
         world.tick()
-        straight_line_monitor = np.append(straight_line_monitor, straight_line_distance(vehicles[0], vehicles[1]))
         rss_monitor.update()
+        #step_counter += 1
+        #if step_counter%40==0:
+        #    print(vehicles[0].get_velocity().x, vehicles[0].get_velocity().y)
     except KeyboardInterrupt:
         print('\n Destroying all Vehicles')
-        distance_trace = np.array(rss_monitor.distance_trace)
-        distance_trace = distance_trace.T[0]
-        np.savetxt("replay_monitor_test.csv", np.stack((distance_trace, straight_line_monitor)).T, delimiter=",")
+        # rss_monitor.straight_distance_trace
+        safe1 = np.stack((np.array(rss_monitor.long_distance_trace),
+                          np.array(rss_monitor.ego_long_velocity_trace),
+                          np.array(rss_monitor.actor_long_velocity_trace),
+                          np.array(rss_monitor.ego_long_acceleration_trace),
+                          np.array(rss_monitor.actor_long_acceleration_trace))).T
+        np.savetxt("example_safe1.csv", safe1, delimiter=",")
+        safe2 = np.stack((np.array(rss_monitor.lat_distance_trace),
+                          np.array(rss_monitor.ego_lat_velocity_trace),
+                          np.array(rss_monitor.actor_lat_velocity_trace),
+                          np.array(rss_monitor.ego_lat_acceleration_trace),
+                          np.array(rss_monitor.actor_lat_acceleration_trace))).T
+        np.savetxt("example_safe2.csv", safe2, delimiter=",")
         client.apply_batch([carla.command.DestroyActor(v) for v in vehicles])
         client.reload_world()
         break
