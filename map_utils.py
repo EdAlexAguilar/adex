@@ -273,7 +273,7 @@ class OpenDriveMap:
         v_location = vehicle.get_location() object from Carla
         Project to waypoint - check feasible waypoints (if in junction)
         """
-        wp1, wp2 = self.carla_map.get_waypoint(v1_loc), self.carla_map.get_waypoint(v2_loc)
+        wp1, wp2 = self.carla_map.get_waypoint(v1_loc,project_to_road=False), self.carla_map.get_waypoint(v2_loc,project_to_road=False)
         feasible_wp1 = self.feasible_waypoints(wp1)
         feasible_wp2 = self.feasible_waypoints(wp2)
         distance = 10*self.waypoint_distance(wp1, wp2)
@@ -287,7 +287,7 @@ class OpenDriveMap:
         return distance
 
     def lateral_road_distance(self, v1_loc, v2_loc):
-        wp1, wp2 = self.carla_map.get_waypoint(v1_loc), self.carla_map.get_waypoint(v2_loc)
+        wp1, wp2 = self.carla_map.get_waypoint(v1_loc, project_to_road=False), self.carla_map.get_waypoint(v2_loc, project_to_road=False)
         feasible_wp1 = self.feasible_waypoints(wp1)
         feasible_wp2 = self.feasible_waypoints(wp2)
         distance = 4
