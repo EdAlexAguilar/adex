@@ -51,6 +51,9 @@ class OpenDriveMap:
             if waypoint.is_junction:
                 self.id_dict_junc_wp[f"{waypoint.road_id}"].append(waypoint)
 
+    def shortest_path(self, road_id_1, road_id_2):
+        return nx.shortest_path(self.topology, str(f"r{road_id_1}"), str(f"r{road_id_2}"))
+
     def is_drivable(self, road):
         """
         Returns True if road has at least one drivable lane
@@ -297,3 +300,14 @@ class OpenDriveMap:
                 if abs(lane_distance) < abs(distance):
                     distance = lane_distance
         return abs(distance*wp1.lane_width)
+
+    def dist_to_end_of_road(self, v_wp):
+        if v_wp.is_junction:
+            return 0
+        road = self.road_from_id(v_wp.road_id)
+        direction = self.find_lane_direction(road, str(v_wp.lane_id))
+        road_length = float(road.get('length'))
+        if direction == "forward":
+            return road_length - v_wp.s
+        elif direction == "backward":
+            return v_wp.s
