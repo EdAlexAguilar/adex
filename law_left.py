@@ -54,6 +54,8 @@ class SafeLeftMonitor:
         self.actor_long_velocity_trace = []
         self.ego_long_acceleration_trace = []
         self.actor_angle_trace = []
+        self.ego_junction_crossed = False
+        self.actor_junction_crossed = False
         self.get_vehicle_dimensions()  # Half width, and Half lengths
 
     def find_junction_of_interest(self, road1, road2):
@@ -71,6 +73,9 @@ class SafeLeftMonitor:
         self.actor_width = 0.5 #self.actor.bounding_box.extent.y
         self.actor_length = 1.5 #self.actor.bounding_box.extent.x
 
+    def visited_junction(self, current, past):
+        return current or past
+
     def update(self, timestamp, actor_status):
         self.timestamps.append(timestamp)
         ego_dict = actor_status[self.ego]
@@ -81,10 +86,13 @@ class SafeLeftMonitor:
         actor_v_long, _ = self.get_longlat_velocity(actor_dict, ego_orientation)
         angle = self.get_actor_angle(actor_dict, ego_orientation)
         ego_wp = self.processed_map.carla_map.get_waypoint(self.get_vehicle_location(ego_dict))
-        ego_dist_to_junc = self.processed_map.dist_to_end_of_road(ego_wp)
-        actor_wp =self.processed_map.carla_map.get_waypoint(self.get_vehicle_location(actor_dict))
-        actor_dist_to_junc = self.processed_map.dist_to_end_of_road(actor_wp)
         ego_in_junc = int(ego_wp.is_junction)
+        self.ego_junction_crossed = self.visited_junction(ego_in_junc, self.ego_junction_crossed)
+        ego_dist_to_junc = max(0, self.processed_map.dist_to_end_of_road(ego_wp, self.ego_junction_crossed) - self.ego_length)
+        actor_wp =self.processed_map.carla_map.get_waypoint(self.get_vehicle_location(actor_dict))
+        actor_in_junc = int(actor_wp.is_junction)
+        self.actor_junction_crossed = self.visited_junction(actor_in_junc, self.actor_junction_crossed)
+        actor_dist_to_junc = max(0, self.processed_map.dist_to_end_of_road(actor_wp, self.actor_junction_crossed) - self.actor_length)
         self.ego_long_velocity_trace.append(ego_v_long)
         self.actor_long_velocity_trace.append(actor_v_long)
         self.ego_long_acceleration_trace.append(ego_acc_long)

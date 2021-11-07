@@ -301,13 +301,19 @@ class OpenDriveMap:
                     distance = lane_distance
         return abs(distance*wp1.lane_width)
 
-    def dist_to_end_of_road(self, v_wp):
+    def dist_to_end_of_road(self, v_wp, junction_crossed):
         if v_wp.is_junction:
             return 0
         road = self.road_from_id(v_wp.road_id)
         direction = self.find_lane_direction(road, str(v_wp.lane_id))
         road_length = float(road.get('length'))
         if direction == "forward":
-            return road_length - v_wp.s
+            if not junction_crossed:
+                return road_length - v_wp.s
+            else:
+                return v_wp.s
         elif direction == "backward":
-            return v_wp.s
+            if not junction_crossed:
+                return v_wp.s
+            else:
+                return road_length - v_wp.s
